@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Forge session temp files
+.forge-temp/
+
+# Vendor skills sentinel
+.claude/skills/.vendor-skills-installed

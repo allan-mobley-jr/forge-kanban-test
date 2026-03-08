@@ -1,0 +1,134 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git checkout *)",
+      "Bash(git commit *)",
+      "Bash(git branch *)",
+      "Bash(git diff *)",
+      "Bash(git fetch *)",
+      "Bash(git log *)",
+      "Bash(git merge *)",
+      "Bash(git pull *)",
+      "Bash(git push -u origin *)",
+      "Bash(git push origin agent/*)",
+      "Bash(git push origin --delete agent/*)",
+      "Bash(git rev-parse *)",
+      "Bash(git remote *)",
+      "Bash(git show *)",
+      "Bash(git status *)",
+      "Bash(git stash *)",
+      "Bash(git revert *)",
+      "Bash(gh issue *)",
+      "Bash(gh pr *)",
+      "Bash(gh api *)",
+      "Bash(gh repo view *)",
+      "Bash(gh label *)",
+      "Bash(gh auth *)",
+      "Bash(pnpm *)",
+      "Bash(node *)",
+      "Bash(vercel *)",
+      "Bash(sleep *)",
+      "Bash(cat *)",
+      "Bash(echo *)",
+      "Bash(ls *)",
+      "Bash(mkdir *)",
+      "Bash(date *)",
+      "Bash(jq *)",
+      "Read",
+      "Write",
+      "Edit",
+      "MultiEdit",
+      "Glob",
+      "Grep",
+      "Task",
+      "Skill",
+      "WebFetch",
+      "WebSearch",
+      "TodoWrite"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push origin main*)",
+      "Bash(git push * origin main*)",
+      "Bash(git push -f *)",
+      "Bash(git push --force*)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f *)",
+      "Bash(git reset --hard*)",
+      "Bash(gh repo delete*)",
+      "Bash(pnpm publish*)",
+      "Bash(npm publish*)",
+      "Bash(cat .env*)",
+      "Bash(cat ./.env*)",
+      "Bash(cat */.env*)",
+      "Bash(cat .git/*)",
+      "Bash(cat .vercel/*)",
+      "Read(.env*)",
+      "Write(.env*)",
+      "Write(pnpm-lock.yaml)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import json,sys,os; d=json.load(sys.stdin); p=d.get('tool_input',{}).get('file_path',''); ap=os.path.abspath(p) if p else ''; blocked_exact=['.env','.env.local','.env.production','.env.development']; blocked_dirs=['.git/','node_modules/','.vercel/']; blocked_names=['CLAUDE.md','AGENTS.md']; blocked_prefixes=['.claude/skills/']; hit=any(os.path.basename(ap)==b for b in blocked_exact) or any(('/'+b) in (ap+'/') for b in blocked_dirs) or any(os.path.basename(ap)==b for b in blocked_names) or any(b in ap for b in blocked_prefixes); sys.exit(2 if hit else 0)\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import json,sys,os; d=json.load(sys.stdin); p=d.get('tool_input',{}).get('file_path',''); protected=['.github/workflows/','pnpm-lock.yaml']; hit=any(x in p for x in protected); sys.exit(2 if hit else 0)\""
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '--- FORGE CONTEXT RECOVERY ---'; echo 'You are the Forge orchestrator in a build loop.'; if [ -f .forge-temp/status.json ]; then echo 'Current progress:'; cat .forge-temp/status.json; fi; if [ -f .forge-temp/current-issue ]; then echo \"Currently working on issue #$(cat .forge-temp/current-issue)\"; fi; echo 'After compaction, re-run /forge to sync state and continue.'; echo '--- END RECOVERY ---'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import json,sys,os; d=json.load(sys.stdin); p=d.get('tool_input',{}).get('file_path',''); os.makedirs('.forge-temp',exist_ok=True); f=open('.forge-temp/session.log','a'); f.write(p+'\\n') if p else None; f.close()\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import json,sys,time; d=json.load(sys.stdin); cmd=d.get('tool_input',{}).get('command',''); gh_muts=['gh issue create','gh issue comment','gh issue edit','gh issue close','gh issue develop','gh pr create','gh pr comment','gh pr edit','gh label create']; api_flags=[' -f ',' -X POST',' -X PATCH',' -X PUT',' -X DELETE']; is_mut=any(m in cmd for m in gh_muts) or ('gh api' in cmd and any(f in cmd for f in api_flags)); time.sleep(1) if is_mut else None\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import json,subprocess,os\nsession_log='.forge-temp/session.log'; issue_file='.forge-temp/current-issue'; status_file='.forge-temp/status.json'; exit_file='.forge-temp/exit-status'\nif os.path.exists(session_log) and os.path.exists(issue_file):\n    issue=open(issue_file).read().strip(); files=open(session_log).read().strip()\n    if files:\n        body='Session ended. Files modified:\\\\n\\\\n'+'\\\\n'.join('- '+f for f in sorted(set(files.splitlines())))\n        subprocess.run(['gh','issue','comment',issue,'--body',body],capture_output=True)\nstatus='needs-restart'\nif os.path.exists(status_file):\n    try:\n        data=json.load(open(status_file)); iss=data.get('issues',{})\n        if iss.get('total',0)>0 and iss.get('closed',0)==iss.get('total',0): status='complete'\n        elif iss.get('revision_needed',0)>0: status='needs-restart'\n        elif iss.get('done_awaiting_merge',0)>0 and iss.get('in_progress',0)==0: status='needs-human'\n        elif iss.get('in_progress',0)==0 and iss.get('needs_human',0)>0: status='needs-human'\n    except: status='error'\nos.makedirs('.forge-temp',exist_ok=True)\nopen(exit_file,'w').write(status)\nfor f in [session_log,issue_file]:\n    if os.path.exists(f): os.remove(f)\""
+          }
+        ]
+      }
+    ]
+  }
+}
