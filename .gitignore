@@ -45,3 +45,6 @@ next-env.d.ts
 
 # Vendor skills sentinel
 .claude/skills/.vendor-skills-installed
+.forge-backup-*
+# next-agents-md
+.next-docs/
