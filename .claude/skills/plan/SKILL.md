@@ -5,7 +5,7 @@ description: >
   GitHub Issues representing the full implementation plan. Invoke when no issues
   exist yet, when all issues are closed (audit mode), or when explicitly asked
   to plan a new feature set.
-allowed-tools: Bash(gh *), Bash(git *), Read, Task, Glob, Grep
+allowed-tools: Bash(gh *), Bash(git *), Read, Task, Glob, Grep, WebSearch, WebFetch
 ---
 
 # /plan — Research & Issue Filing
@@ -58,6 +58,18 @@ Combine the four agent outputs into a unified implementation plan:
 4. **Order within milestones** — within each milestone, order issues by dependency. Issue ordering IS the dependency graph — lower-numbered issues are built first.
 5. **Note recommended vendor skills** — if the stack agent recommended additional vendor skills (e.g., `neon-postgres`, `supabase`, `stripe`), include the install commands in the first issue's Implementation Notes so `/build` can run them during the infrastructure phase.
 
+### Step 3.5: Devil's Advocate
+
+Before filing anything, challenge the synthesized plan. Spawn an **advocate agent** via the Task tool. Read `.claude/skills/plan/references/advocate-agent.md` and spawn a Task with its contents as the prompt. Append PROMPT.md and the full synthesized plan (milestones, issue list with titles, objectives, implementation notes, and dependency ordering) as context.
+
+Handle the advocate verdict:
+
+| Verdict | Action |
+|---------|--------|
+| PROCEED | Continue to Step 4 |
+| REVISE | Re-synthesize once incorporating the advocate's feedback. Do not re-run the advocate — proceed to Step 4 with the revised plan. |
+| ESCALATE | Route to `/ask` with the advocate's concerns for human input. |
+
 ### Step 4: Create milestones
 
 Create milestones on GitHub. Note: `gh` does not have a built-in milestone command, so use the API:
@@ -78,6 +90,39 @@ gh api rate_limit --jq '.resources.core | "Rate limit: \(.remaining)/\(.limit) r
 ```
 
 If fewer than 100 requests remain, stop and inform the user. Save the synthesized plan to a comment on a tracking issue so the next session can resume filing. If the budget is insufficient, the milestones created in Step 4 are harmless — they'll be reused when the session resumes.
+
+### Step 4c: File README update issue
+
+Before filing any feature issues, file a README update issue so it gets the lowest issue number. `/build` will pick it up first, replacing the default Next.js boilerplate before any feature work begins.
+
+```bash
+gh issue create \
+  --title "Replace default README with project README" \
+  --body "$(cat <<'EOF'
+## Objective
+Replace the default Next.js boilerplate README with a project-specific README derived from SPECIFICATION.md, so GitHub repo visitors understand what the project is.
+
+## Dependencies
+None
+
+## Implementation Notes
+- Read SPECIFICATION.md for project purpose, stack, and architecture
+- Target audience: developers visiting the GitHub repo for the first time
+- Include: project description, tech stack, getting started, development commands
+- Remove all default create-next-app content
+
+## Acceptance Criteria
+- [ ] README.md describes the actual project (not Next.js boilerplate)
+- [ ] Includes project purpose, tech stack, and getting started instructions
+- [ ] pnpm lint passes
+- [ ] pnpm tsc --noEmit passes
+- [ ] pnpm test passes
+- [ ] pnpm build completes without error
+EOF
+)" \
+  --label "ai-generated" \
+  --milestone "Phase 0: Infrastructure"
+```
 
 ### Step 5: File issues
 
@@ -228,6 +273,23 @@ Read three sources to understand the full picture:
 
 Also read `CLAUDE.md` for project conventions.
 
+### Audit Step 1.5: Explore the codebase
+
+Before spawning audit sub-agents, explore the actual built codebase to understand what was implemented — not just what closed issues say was built:
+
+- Use Glob to map the project structure (`src/**/*.tsx`, `src/**/*.ts`)
+- Use Grep to find key patterns (route definitions, component exports, API endpoints)
+- Read key files (layout components, main pages, API routes) to understand the actual architecture
+
+Compile a codebase summary including:
+- Route structure (actual `src/app/` directory layout)
+- Key components and their relationships
+- Data fetching patterns in use
+- State management approach
+- Test coverage (which files have corresponding test files)
+
+Include this codebase summary in the audit sub-agent context alongside closed issues and graveyard requirements. This ensures the audit compares requirements against the actual implementation, not just issue descriptions.
+
 ### Audit Step 2: Spawn audit sub-agents
 
 Read the same four reference files from `.claude/skills/plan/references/` and spawn sub-agents via the **Task tool** in parallel. For each agent, prepend the following audit context before the agent's original prompt:
@@ -243,11 +305,15 @@ ORIGINAL REQUIREMENTS:
 SPECIFICATION (structured interpretation of requirements):
 [contents of SPECIFICATION.md]
 
-CLOSED ISSUES (what was built):
+CLOSED ISSUES (what was planned):
 [summary of closed issue titles and objectives]
 
+CODEBASE (what was actually built):
+[codebase summary from Audit Step 1.5]
+
 Instead of recommending what to build, identify what is MISSING or WRONG
-compared to the requirements. For each gap, describe what's missing and why
+compared to the requirements. Compare against the actual codebase, not
+just the closed issues — implementations may have diverged from plans. For each gap, describe what's missing and why
 it matters. If everything looks complete for your area, say so explicitly.
 ```
 
