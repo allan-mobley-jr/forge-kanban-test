@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, forwardRef, useImperativeHandle } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -7,7 +8,12 @@ import {
 } from "@dnd-kit/sortable";
 import type { Column as ColumnType, Card as CardType } from "@/lib/types";
 import { SortableCard } from "./SortableCard";
-import { AddCardButton } from "./AddCardButton";
+import { AddCardButton, type AddCardButtonHandle } from "./AddCardButton";
+
+export interface ColumnHandle {
+  focus: () => void;
+  activateAddCard: () => void;
+}
 
 interface ColumnProps {
   column: ColumnType;
@@ -16,7 +22,27 @@ interface ColumnProps {
   draggedCardId?: string | null;
 }
 
-export function Column({ column, cards, onCardClick, draggedCardId }: ColumnProps) {
+export const Column = forwardRef<ColumnHandle, ColumnProps>(function Column(
+  { column, cards, onCardClick, draggedCardId },
+  ref,
+) {
+  const addCardRef = useRef<AddCardButtonHandle>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      const firstCard = sectionRef.current?.querySelector<HTMLElement>("[tabindex]");
+      if (firstCard) {
+        firstCard.focus();
+      } else {
+        sectionRef.current?.focus();
+      }
+    },
+    activateAddCard: () => {
+      addCardRef.current?.activate();
+    },
+  }));
+
   const cardCount = column.cardIds.length;
 
   const { setNodeRef } = useDroppable({
@@ -25,6 +51,7 @@ export function Column({ column, cards, onCardClick, draggedCardId }: ColumnProp
 
   return (
     <section
+      ref={sectionRef}
       aria-label={column.title}
       className="flex min-w-[280px] flex-1 flex-col rounded-lg bg-slate-100 p-3"
     >
@@ -58,7 +85,7 @@ export function Column({ column, cards, onCardClick, draggedCardId }: ColumnProp
           )}
         </div>
       </SortableContext>
-      <AddCardButton columnId={column.id} />
+      <AddCardButton ref={addCardRef} columnId={column.id} />
     </section>
   );
-}
+});
