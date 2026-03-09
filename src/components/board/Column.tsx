@@ -1,17 +1,27 @@
 "use client";
 
+import { useDroppable } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import type { Column as ColumnType, Card as CardType } from "@/lib/types";
-import { Card } from "./Card";
+import { SortableCard } from "./SortableCard";
 import { AddCardButton } from "./AddCardButton";
 
 interface ColumnProps {
   column: ColumnType;
   cards: Record<string, CardType>;
   onCardClick?: (cardId: string) => void;
+  draggedCardId?: string | null;
 }
 
-export function Column({ column, cards, onCardClick }: ColumnProps) {
+export function Column({ column, cards, onCardClick, draggedCardId }: ColumnProps) {
   const cardCount = column.cardIds.length;
+
+  const { setNodeRef } = useDroppable({
+    id: column.id,
+  });
 
   return (
     <section
@@ -26,16 +36,28 @@ export function Column({ column, cards, onCardClick }: ColumnProps) {
           {cardCount}
         </span>
       </div>
-      <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
-        {column.cardIds.map((cardId) => {
-          const card = cards[cardId];
-          if (!card) return null;
-          return <Card key={cardId} card={card} onClick={() => onCardClick?.(cardId)} />;
-        })}
-        {cardCount === 0 && (
-          <p className="py-8 text-center text-sm text-slate-400">No tasks</p>
-        )}
-      </div>
+      <SortableContext
+        items={column.cardIds}
+        strategy={verticalListSortingStrategy}
+      >
+        <div ref={setNodeRef} className="flex flex-1 flex-col gap-2 overflow-y-auto">
+          {column.cardIds.map((cardId) => {
+            const card = cards[cardId];
+            if (!card) return null;
+            return (
+              <SortableCard
+                key={cardId}
+                card={card}
+                onClick={() => onCardClick?.(cardId)}
+                isDragOverlay={draggedCardId === cardId}
+              />
+            );
+          })}
+          {cardCount === 0 && (
+            <p className="py-8 text-center text-sm text-slate-400">No tasks</p>
+          )}
+        </div>
+      </SortableContext>
       <AddCardButton columnId={column.id} />
     </section>
   );
