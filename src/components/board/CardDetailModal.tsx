@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar, Trash2 } from "lucide-react";
 import { MarkdownEditor } from "./MarkdownEditor";
+import { ColorLabelPicker } from "./ColorLabelPicker";
 
 interface CardDetailModalProps {
   cardId: string | null;
@@ -92,6 +93,12 @@ function CardDetailContent({
         onKeyDown={handleTitleKeyDown}
         aria-label="Card title"
         className="text-base font-medium"
+      />
+      <ColorLabelPicker
+        selected={card.labels}
+        onChange={(labels) =>
+          dispatch({ type: "UPDATE_CARD", cardId: card.id, updates: { labels } })
+        }
       />
       <MarkdownEditor
         value={card.description ?? ""}
