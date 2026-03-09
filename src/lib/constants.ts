@@ -24,3 +24,4 @@ export const DEFAULT_BOARD: Board = {
   cards: {},
 };
 // Auto-merge test Mon Mar  9 09:59:28 EDT 2026
+// Copilot check detection test Mon Mar  9 10:04:13 EDT 2026
