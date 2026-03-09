@@ -54,7 +54,7 @@ All project state is encoded in GitHub Issue labels. Only one issue is active at
 | Label | Meaning |
 |-------|---------|
 | `agent:in-progress` | An agent is actively working on this issue |
-| `agent:done` | PR opened, awaiting human review and merge |
+| `agent:done` | PR opened, awaiting CI and auto-merge |
 | `agent:needs-human` | Blocked on a decision only a human can make |
 
 - **No `agent:*` label** = backlog (unclaimed, ready to build)
@@ -92,8 +92,17 @@ For fully autonomous headless operation, use `forge run` from the project root. 
 - GitHub Issues are the task queue. No issue means no work.
 - Every feature is implemented on a feature branch and submitted as a PR.
 - PRs require CI to pass (lint + typecheck + test + build) before merge.
-- The human approves every PR before it's merged.
-- All project state lives in GitHub — nothing important is stored locally.
+- PRs are auto-merged immediately after CI passes.- All project state lives in GitHub — nothing important is stored locally.
+
+### PR Merge
+
+**Mode:** auto — PRs are merged as soon as CI passes.
+
+No code review step. The agent opens a PR, waits for CI, and squash-merges immediately. Human `CHANGES_REQUESTED` reviews are still routed to `/revise` if submitted before the merge.
+
+### Production Deployment
+
+The `production` branch is off-limits. Do not push to it, create PRs targeting it, or modify it in any way.
 
 ## Conventions
 
@@ -110,6 +119,7 @@ For fully autonomous headless operation, use `forge run` from the project root. 
 ## Security
 
 - Do not push directly to main — all changes go through feature branches and PRs.
+- Do not push to `production` or target PRs at it — the production branch is off-limits.
 - Do not force-push (`--force`, `-f`) — it rewrites shared history.
 - Do not run destructive GitHub commands (`gh repo delete`, etc.).
 - Do not read, print, or log environment variables or secrets.
@@ -124,7 +134,7 @@ For fully autonomous headless operation, use `forge run` from the project root. 
 - Modify `pnpm-lock.yaml` manually — let `pnpm install` handle it.
 - Skip quality checks — always run `pnpm lint && pnpm tsc --noEmit && pnpm test && pnpm build`.
 - Work on code without a corresponding GitHub Issue.
-- Merge PRs without human approval.
+- Merge PRs before CI passes.
 - Modify `CLAUDE.md` or files in `.claude/skills/`, or modify `PROMPT.md` or `SPECIFICATION.md` outside the `/plan` archival step (protected after initial planning).
 - Install or search for third-party skills at runtime.
 - Use MCP server tools — Forge uses vendor skills and CLI tools, not MCP.
