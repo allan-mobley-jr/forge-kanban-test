@@ -7,9 +7,10 @@ import { AddCardButton } from "./AddCardButton";
 interface ColumnProps {
   column: ColumnType;
   cards: Record<string, CardType>;
+  onCardClick?: (cardId: string) => void;
 }
 
-export function Column({ column, cards }: ColumnProps) {
+export function Column({ column, cards, onCardClick }: ColumnProps) {
   const cardCount = column.cardIds.length;
 
   return (
@@ -29,7 +30,7 @@ export function Column({ column, cards }: ColumnProps) {
         {column.cardIds.map((cardId) => {
           const card = cards[cardId];
           if (!card) return null;
-          return <Card key={cardId} card={card} />;
+          return <Card key={cardId} card={card} onClick={() => onCardClick?.(cardId)} />;
         })}
         {cardCount === 0 && (
           <p className="py-8 text-center text-sm text-slate-400">No tasks</p>
