@@ -8,6 +8,7 @@ export default function Home() {
         <div className="hidden items-center gap-3 text-xs text-slate-400 sm:flex">
           <span><kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-500">N</kbd> New card</span>
           <span><kbd className="ml-0.5 rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-500">1</kbd><kbd className="ml-0.5 rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-500">2</kbd><kbd className="ml-0.5 rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-500">3</kbd> Focus column</span>
+          <span><kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-500">&#8984;K</kbd> Search</span>
           <span><kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-500">Esc</kbd> Close</span>
         </div>
       </header>
