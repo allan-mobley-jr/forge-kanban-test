@@ -1,13 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useImperativeHandle, forwardRef, type Ref } from "react";
 import { useBoard } from "@/context/BoardContext";
+
+export interface AddCardButtonHandle {
+  activate: () => void;
+}
 
 interface AddCardButtonProps {
   columnId: string;
 }
 
-export function AddCardButton({ columnId }: AddCardButtonProps) {
+export const AddCardButton = forwardRef(function AddCardButton(
+  { columnId }: AddCardButtonProps,
+  ref: Ref<AddCardButtonHandle>,
+) {
   const [isAdding, setIsAdding] = useState(false);
   const [title, setTitle] = useState("");
   const { dispatch } = useBoard();
@@ -25,6 +32,10 @@ export function AddCardButton({ columnId }: AddCardButtonProps) {
     setTitle("");
     setIsAdding(false);
   }
+
+  useImperativeHandle(ref, () => ({
+    activate: () => setIsAdding(true),
+  }));
 
   if (isAdding) {
     return (
@@ -64,4 +75,4 @@ export function AddCardButton({ columnId }: AddCardButtonProps) {
       + Add card
     </button>
   );
-}
+});

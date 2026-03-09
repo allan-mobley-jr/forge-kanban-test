@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -16,14 +16,34 @@ import {
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useBoard } from "@/context/BoardContext";
-import { Column } from "./Column";
+import { Column, type ColumnHandle } from "./Column";
 import { Card } from "./Card";
 import { CardDetailModal } from "./CardDetailModal";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 export function Board() {
   const { board, dispatch } = useBoard();
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [draggedCardId, setDraggedCardId] = useState<string | null>(null);
+  const columnRefs = useRef<(ColumnHandle | null)[]>([]);
+
+  const handleNewCard = useCallback(() => {
+    columnRefs.current[0]?.activateAddCard();
+  }, []);
+
+  const handleEscape = useCallback(() => {
+    setActiveCardId(null);
+  }, []);
+
+  const handleFocusColumn = useCallback((columnIndex: number) => {
+    columnRefs.current[columnIndex]?.focus();
+  }, []);
+
+  useKeyboardShortcuts({
+    onNewCard: handleNewCard,
+    onEscape: handleEscape,
+    onFocusColumn: handleFocusColumn,
+  });
 
   const pointerSensor = useSensor(PointerSensor, {
     activationConstraint: { distance: 5 },
@@ -127,9 +147,10 @@ export function Board() {
       onDragEnd={handleDragEnd}
     >
       <main className="flex flex-1 gap-4 overflow-x-auto p-4 lg:overflow-x-visible">
-        {board.columns.map((column) => (
+        {board.columns.map((column, index) => (
           <Column
             key={column.id}
+            ref={(handle) => { columnRefs.current[index] = handle; }}
             column={column}
             cards={board.cards}
             onCardClick={(cardId) => setActiveCardId(cardId)}
