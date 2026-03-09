@@ -12,7 +12,7 @@ export function Board() {
         <Column
           key={column.id}
           column={column}
-          cardCount={column.cardIds.length}
+          cards={board.cards}
         />
       ))}
     </main>
