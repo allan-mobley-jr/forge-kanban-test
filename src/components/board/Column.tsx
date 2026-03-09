@@ -1,13 +1,17 @@
 "use client";
 
-import type { Column as ColumnType } from "@/lib/types";
+import type { Column as ColumnType, Card as CardType } from "@/lib/types";
+import { Card } from "./Card";
+import { AddCardButton } from "./AddCardButton";
 
 interface ColumnProps {
   column: ColumnType;
-  cardCount: number;
+  cards: Record<string, CardType>;
 }
 
-export function Column({ column, cardCount }: ColumnProps) {
+export function Column({ column, cards }: ColumnProps) {
+  const cardCount = column.cardIds.length;
+
   return (
     <section
       aria-label={column.title}
@@ -22,10 +26,16 @@ export function Column({ column, cardCount }: ColumnProps) {
         </span>
       </div>
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
+        {column.cardIds.map((cardId) => {
+          const card = cards[cardId];
+          if (!card) return null;
+          return <Card key={cardId} card={card} />;
+        })}
         {cardCount === 0 && (
           <p className="py-8 text-center text-sm text-slate-400">No tasks</p>
         )}
       </div>
+      <AddCardButton columnId={column.id} />
     </section>
   );
 }
