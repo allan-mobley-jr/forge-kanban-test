@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar, Trash2 } from "lucide-react";
+import { MarkdownEditor } from "./MarkdownEditor";
 
 interface CardDetailModalProps {
   cardId: string | null;
@@ -39,7 +40,7 @@ export function CardDetailModal({ cardId, onClose }: CardDetailModalProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="p-6 sm:max-w-md">
+      <DialogContent className="p-6 sm:max-w-2xl">
         {card && <CardDetailContent key={card.id} card={card} onClose={onClose} />}
       </DialogContent>
     </Dialog>
@@ -91,6 +92,12 @@ function CardDetailContent({
         onKeyDown={handleTitleKeyDown}
         aria-label="Card title"
         className="text-base font-medium"
+      />
+      <MarkdownEditor
+        value={card.description ?? ""}
+        onChange={(description) =>
+          dispatch({ type: "UPDATE_CARD", cardId: card.id, updates: { description } })
+        }
       />
       <div className="flex items-center gap-2 text-xs text-slate-500">
         <Calendar className="size-3.5" />
