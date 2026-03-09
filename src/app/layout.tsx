@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { BoardProvider } from "@/context/BoardContext";
+import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +17,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "KanbanFlow",
   description: "Personal task management kanban board",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "KanbanFlow",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0f172a",
 };
 
 export default function RootLayout({
@@ -28,7 +39,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <BoardProvider>{children}</BoardProvider>
+        <BoardProvider>
+          <ServiceWorkerRegistrar />
+          {children}
+        </BoardProvider>
       </body>
     </html>
   );

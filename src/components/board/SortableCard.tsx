@@ -32,7 +32,7 @@ export function SortableCard({ card, onClick, isDragOverlay }: SortableCardProps
       style={style}
       {...attributes}
       {...listeners}
-      className={isDragging || isDragOverlay ? "opacity-40" : ""}
+      className={`motion-reduce:transition-none ${isDragging || isDragOverlay ? "opacity-40" : ""}`}
     >
       <Card card={card} onClick={!isDragging ? onClick : undefined} />
     </div>
