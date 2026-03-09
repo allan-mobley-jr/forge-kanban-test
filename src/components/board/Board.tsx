@@ -20,6 +20,7 @@ import { Column, type ColumnHandle } from "./Column";
 import { Card } from "./Card";
 import { CardDetailModal } from "./CardDetailModal";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { SearchDialog } from "@/components/search/SearchDialog";
 
 export function Board() {
   const { board, dispatch } = useBoard();
@@ -161,6 +162,7 @@ export function Board() {
           cardId={activeCardId}
           onClose={() => setActiveCardId(null)}
         />
+        <SearchDialog onSelectCard={(cardId) => setActiveCardId(cardId)} />
       </main>
       <DragOverlay>
         {draggedCard ? (
