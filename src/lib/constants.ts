@@ -23,3 +23,4 @@ export const DEFAULT_BOARD: Board = {
   columns: DEFAULT_COLUMNS.map((col) => ({ ...col, cardIds: [] as string[] })),
   cards: {},
 };
+// Auto-merge test Mon Mar  9 09:59:28 EDT 2026
