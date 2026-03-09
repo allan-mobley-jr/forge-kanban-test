@@ -20,7 +20,7 @@ export function Card({ card, onClick }: CardProps) {
           onClick?.();
         }
       }}
-      className="cursor-pointer rounded-lg bg-white p-3 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+      className="cursor-pointer rounded-lg bg-white p-3 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 motion-reduce:transition-none"
     >
       {card.labels.length > 0 && (
         <div className="mb-1.5 flex gap-1">

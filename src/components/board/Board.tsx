@@ -166,7 +166,7 @@ export function Board() {
       </main>
       <DragOverlay>
         {draggedCard ? (
-          <div className="rotate-2 shadow-lg">
+          <div className="rotate-2 shadow-lg motion-reduce:rotate-0 motion-reduce:transition-none">
             <Card card={draggedCard} />
           </div>
         ) : null}
